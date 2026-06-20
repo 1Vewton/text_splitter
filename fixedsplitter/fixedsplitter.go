@@ -1,5 +1,5 @@
 // Split the document into chunks that have fixed sizes.
-package fixed_splitter
+package fixedsplitter
 
 import (
 	"context"

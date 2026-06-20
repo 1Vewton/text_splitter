@@ -1,4 +1,4 @@
-package fixed_splitter
+package fixedsplitter
 
 import (
 	"testing"
