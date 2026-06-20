@@ -2,6 +2,7 @@
 package fixed_splitter
 
 import (
+	"context"
 	"errors"
 
 	"github.com/1Vewton/text_splitter"
@@ -35,7 +36,7 @@ func New(
 }
 
 // Split the single document
-func (splitter *FixedSplitter) SplitText() ([]string, error) {
+func (splitter *FixedSplitter) SplitText(ctx context.Context) ([]string, error) {
 	var result []string = []string{}
 	// Check if the document field is nil
 	if splitter.Document == nil {
@@ -60,7 +61,7 @@ func (splitter *FixedSplitter) SplitText() ([]string, error) {
 }
 
 // Split multiple documents
-func (splitter *FixedSplitter) SplitMultipleTexts() ([]*text_splitter.SplitResult, error) {
+func (splitter *FixedSplitter) SplitMultipleTexts(ctx context.Context) ([]*text_splitter.SplitResult, error) {
 	var result []*text_splitter.SplitResult = []*text_splitter.SplitResult{}
 	// Return the default result
 	return result, nil
