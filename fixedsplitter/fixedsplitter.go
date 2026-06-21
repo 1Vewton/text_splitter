@@ -36,7 +36,10 @@ func NewFixedSplitter(
 }
 
 // SplitText splits the single document
-func (splitter *FixedSplitter) SplitText(ctx context.Context) ([]string, error) {
+func (splitter *FixedSplitter) SplitText(ctx context.Context) (
+	[]string,
+	error,
+) {
 	var result []string = []string{}
 	// Check if the document field is nil
 	if splitter.Document == nil {
@@ -52,7 +55,7 @@ func (splitter *FixedSplitter) SplitText(ctx context.Context) ([]string, error) 
 	}
 	start := 0
 	for start < len(runedDocument) {
-		end := max(start+splitter.ChunkSize, len(runedDocument))
+		end := min(start+splitter.ChunkSize, len(runedDocument))
 		result = append(result, string(runedDocument[start:end]))
 		start = start + splitter.ChunkSize - splitter.Overlap
 	}
@@ -61,7 +64,10 @@ func (splitter *FixedSplitter) SplitText(ctx context.Context) ([]string, error) 
 }
 
 // SplitMultipleTexts splits multiple documents
-func (splitter *FixedSplitter) SplitMultipleTexts(ctx context.Context) ([]*textsplitter.SplitResult, error) {
+func (splitter *FixedSplitter) SplitMultipleTexts(ctx context.Context) (
+	[]*textsplitter.SplitResult,
+	error,
+) {
 	var result []*textsplitter.SplitResult = []*textsplitter.SplitResult{}
 	// Return the default result
 	return result, nil
