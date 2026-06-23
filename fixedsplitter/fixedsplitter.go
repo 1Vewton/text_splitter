@@ -70,7 +70,7 @@ func (splitter *FixedSplitter) SplitMultipleTexts(
 		chan *textsplitter.TempSplitResult,
 		len(documents)*2,
 	)
-	// Executing the error group
+	// Executing the error group that split each document in documents
 	group, ctx := errgroup.WithContext(ctx)
 	for _, fullText := range documents {
 		fullTextTmp := fullText
@@ -89,7 +89,7 @@ func (splitter *FixedSplitter) SplitMultipleTexts(
 					case resultChannel <- tmpSplitResult:
 					default:
 						return errors.New(
-							"There is a problem with length of documents",
+							"There is a problem with length of resultChannel",
 						)
 					}
 				}
@@ -100,6 +100,7 @@ func (splitter *FixedSplitter) SplitMultipleTexts(
 	if err := group.Wait(); err != nil {
 		return result, err
 	}
+	// The channel has to be closed to process data
 	close(resultChannel)
 	// Process return data
 	for chunkResult := range resultChannel {
