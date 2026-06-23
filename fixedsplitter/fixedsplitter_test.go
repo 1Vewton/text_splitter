@@ -1,9 +1,11 @@
 package fixedsplitter
 
 import (
+	"context"
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/1Vewton/textsplitter"
 )
@@ -21,7 +23,7 @@ func TestInterface(t *testing.T) {
 func TestSplitText(t *testing.T) {
 	chunkSize := 60
 	overlap := 20
-	content, errRead := os.ReadFile("testdata/split_text.txt")
+	content, errRead := os.ReadFile("testdata/split_text_1.txt")
 	if errRead != nil {
 		t.Fatalf("Fatal error occured when reading testdata due to %s", errRead)
 	}
@@ -30,8 +32,11 @@ func TestSplitText(t *testing.T) {
 		chunkSize,
 		overlap,
 	)
+	// Timeout checking
+	ctx, cancel := context.WithTimeout(t.Context(), 5*time.Second)
+	defer cancel()
 	result, errChunk := splitter.SplitText(
-		t.Context(),
+		ctx,
 		document,
 	)
 	if errChunk != nil {
