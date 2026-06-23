@@ -51,7 +51,7 @@ func TestSplitText(t *testing.T) {
 			t.Errorf("The %s is longer than chunk size", i)
 		}
 		if !strings.Contains(document, i) {
-			t.Errorf("%s does not exists", i)
+			t.Errorf("%s does not exists in original document", i)
 		}
 	}
 }
@@ -108,5 +108,10 @@ func TestSplitMultipleTexts(t *testing.T) {
 	if errChunk != nil {
 		t.Fatalf("Fatal error occured when running test due to %s", errChunk)
 	}
-	t.Log(result)
+	for _, i := range result {
+		t.Log(i.ChunkResult)
+		if !strings.Contains(i.FullText, i.ChunkResult) {
+			t.Errorf("%s does not exists", i)
+		}
+	}
 }
