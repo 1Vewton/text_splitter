@@ -29,10 +29,11 @@ func TestSplitText(t *testing.T) {
 	splitter := NewFixedSplitter(
 		chunkSize,
 		overlap,
-		&document,
-		nil,
 	)
-	result, errChunk := splitter.SplitText(t.Context())
+	result, errChunk := splitter.SplitText(
+		t.Context(),
+		document,
+	)
 	if errChunk != nil {
 		t.Fatalf("Fatal error occured when running test due to %s", errChunk)
 	}

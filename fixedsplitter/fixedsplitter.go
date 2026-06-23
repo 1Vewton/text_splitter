@@ -6,6 +6,7 @@ import (
 	"errors"
 
 	"github.com/1Vewton/textsplitter"
+	"golang.org/x/sync/errgroup"
 )
 
 // FixedSplitter split documents into chunks that have fixed sizes
@@ -24,33 +25,26 @@ type FixedSplitter struct {
 func NewFixedSplitter(
 	chunkSize int,
 	overlap int,
-	document *string,
-	documents *[]string,
 ) *FixedSplitter {
 	return &FixedSplitter{
 		ChunkSize: chunkSize,
 		Overlap:   overlap,
-		Document:  document,
-		Documents: documents,
 	}
 }
 
 // SplitText splits the single document
-func (splitter *FixedSplitter) SplitText(ctx context.Context) (
+func (splitter *FixedSplitter) SplitText(
+	ctx context.Context,
+	document string,
+) (
 	[]string,
 	error,
 ) {
 	var result []string = []string{}
-	// Check if the document field is nil
-	if splitter.Document == nil {
-		return result, errors.New(
-			"You cannot give a nil pointer to the Document field of splitter while using SplitText method",
-		)
-	}
 	// If the real length is smaller than Chunksize
-	runedDocument := []rune(*splitter.Document)
+	runedDocument := []rune(document)
 	if len(runedDocument) < splitter.ChunkSize {
-		result = append(result, *splitter.Document)
+		result = append(result, document)
 		return result, nil
 	}
 	start := 0
@@ -64,11 +58,59 @@ func (splitter *FixedSplitter) SplitText(ctx context.Context) (
 }
 
 // SplitMultipleTexts splits multiple documents
-func (splitter *FixedSplitter) SplitMultipleTexts(ctx context.Context) (
+func (splitter *FixedSplitter) SplitMultipleTexts(
+	ctx context.Context,
+	documents []string,
+) (
 	[]*textsplitter.SplitResult,
 	error,
 ) {
 	var result []*textsplitter.SplitResult = []*textsplitter.SplitResult{}
+	resultChannel := make(
+		chan *textsplitter.TempSplitResult,
+		len(documents)*2,
+	)
+	// Executing the error group
+	group, ctx := errgroup.WithContext(ctx)
+	for _, fullText := range documents {
+		fullTextTmp := fullText
+		group.Go(
+			func() error {
+				result, err := splitter.SplitText(
+					ctx,
+					fullTextTmp,
+				)
+				if err == nil {
+					tmpSplitResult := &textsplitter.TempSplitResult{
+						FullText:    fullTextTmp,
+						ChunkResult: result,
+					}
+					select {
+					case resultChannel <- tmpSplitResult:
+					default:
+						return errors.New(
+							"There is a problem with length of documents",
+						)
+					}
+				}
+				return err
+			},
+		)
+	}
+	if err := group.Wait(); err != nil {
+		return result, err
+	}
+	close(resultChannel)
+	// Process return data
+	for chunkResult := range resultChannel {
+		for _, chunk := range chunkResult.ChunkResult {
+			tmpResult := &textsplitter.SplitResult{
+				FullText:    chunkResult.FullText,
+				ChunkResult: chunk,
+			}
+			result = append(result, tmpResult)
+		}
+	}
 	// Return the default result
 	return result, nil
 }

@@ -6,6 +6,18 @@ import (
 
 // TextSplitter interface
 type TextSplitter interface {
-	SplitText(ctx context.Context) ([]string, error)
-	SplitMultipleTexts(ctx context.Context) ([]*SplitResult, error)
+	SplitText(
+		ctx context.Context,
+		document string,
+	) (
+		[]string,
+		error,
+	)
+	SplitMultipleTexts(
+		ctx context.Context,
+		documents []string,
+	) (
+		[]*SplitResult,
+		error,
+	)
 }
