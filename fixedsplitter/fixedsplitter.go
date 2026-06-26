@@ -15,10 +15,6 @@ type FixedSplitter struct {
 	ChunkSize int
 	// Maximum number of characters shared by two neighboring chunks
 	Overlap int
-	// Original Document
-	Document *string
-	// List of documents
-	Documents *[]string
 }
 
 // NewFixedSplitter creates new fixed splitter
