@@ -2,9 +2,12 @@ package recursivesplitter
 
 import (
 	"context"
+	"errors"
 	"strings"
 
+	"github.com/1Vewton/textsplitter"
 	"github.com/1Vewton/textsplitter/fixedsplitter"
+	"golang.org/x/sync/errgroup"
 )
 
 // RecursiveSplitter splits the text according to the natural order of the language.
@@ -121,4 +124,63 @@ func (splitter *RecursiveSplitter) SplitText(
 		0,
 	)
 	return result, err
+}
+
+// SplitMultipleTexts splits multiple documents using RecursiveSplitter method
+func (splitter *RecursiveSplitter) SplitMultipleTexts(
+	ctx context.Context,
+	documents []string,
+) (
+	[]*textsplitter.SplitResult,
+	error,
+) {
+	var result []*textsplitter.SplitResult = []*textsplitter.SplitResult{}
+	resultChannel := make(
+		chan *textsplitter.TempSplitResult,
+		len(documents)*2,
+	)
+	// Executing the error group that split each document in documents
+	group, ctx := errgroup.WithContext(ctx)
+	for _, fullText := range documents {
+		fullTextTmp := fullText
+		group.Go(
+			func() error {
+				result, err := splitter.SplitText(
+					ctx,
+					fullTextTmp,
+				)
+				if err == nil {
+					tmpSplitResult := &textsplitter.TempSplitResult{
+						FullText:    fullTextTmp,
+						ChunkResult: result,
+					}
+					select {
+					case resultChannel <- tmpSplitResult:
+					default:
+						return errors.New(
+							"There is a problem with length of resultChannel",
+						)
+					}
+				}
+				return err
+			},
+		)
+	}
+	if err := group.Wait(); err != nil {
+		return result, err
+	}
+	// The channel has to be closed to process data
+	close(resultChannel)
+	// Process return data
+	for chunkResult := range resultChannel {
+		for _, chunk := range chunkResult.ChunkResult {
+			tmpResult := &textsplitter.SplitResult{
+				FullText:    chunkResult.FullText,
+				ChunkResult: chunk,
+			}
+			result = append(result, tmpResult)
+		}
+	}
+	// Return the default result
+	return result, nil
 }
