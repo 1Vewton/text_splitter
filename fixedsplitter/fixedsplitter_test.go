@@ -45,6 +45,7 @@ func TestSplitText(t *testing.T) {
 		t.Fatalf("Fatal error occured when running test due to %s", errChunk)
 	}
 	t.Log(result)
+	t.Log(len(result))
 	for _, i := range result {
 		chunkLength := len([]rune(i))
 		if chunkLength > chunkSize {
